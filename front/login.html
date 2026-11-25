@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar | Conecta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="auth-layout">
+
+        <a class="brand" href="login.html">✦ Conecta.</a>
+
+        <section class="auth-card">
+
+            <h1>Que bom te ver! 💜</h1>
+
+            <p>
+                Entre na sua conta e continue conectado
+                com a nossa comunidade.
+            </p>
+
+            <form id="loginForm">
+
+                <label>E-mail</label>
+
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="Digite seu e-mail"
+                    required
+                >
+
+                <label>Senha</label>
+
+                <input
+                    type="password"
+                    name="senha"
+                    placeholder="Digite sua senha"
+                    required
+                >
+
+                <button type="submit">Entrar na Conecta ✦</button>
+
+            </form>
+
+            <p id="mensagem"></p>
+
+            <p class="switch-auth">
+                Ainda não possui uma conta?
+                <a href="cadastro.html">Cadastre-se</a>
+            </p>
+
+        </section>
+
+    </main>
+
+
+    <script>
+
+    const API = "http://localhost/redesocial/back/api.php";
+
+    document.getElementById("loginForm")
+    .addEventListener("submit", async function(e) {
+
+        e.preventDefault();
+
+        const dados = Object.fromEntries(new FormData(this));
+
+        const mensagem = document.getElementById("mensagem");
+
+        mensagem.textContent = "Verificando seus dados...";
+
+        try {
+
+            const resposta = await fetch(API + "?rota=login", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(dados)
+
+            });
+
+            const resultado = await resposta.json();
+
+            if (!resposta.ok || !resultado.sucesso) {
+
+                throw new Error(
+                    resultado.erro || "E-mail ou senha incorretos."
+                );
+
+            }
+
+            const usuario = resultado.usuario;
+
+            if (!usuario || !usuario.id_usuario) {
+
+                throw new Error("Não foi possível identificar o usuário.");
+
+            }
+
+            localStorage.setItem(
+                "id_usuario",
+                usuario.id_usuario
+            );
+
+            localStorage.setItem(
+                "nome_usuario",
+                usuario.nome
+            );
+
+            localStorage.setItem(
+                "email_usuario",
+                usuario.email
+            );
+
+            window.location.href = "feed.html";
+
+        } catch (erro) {
+
+            mensagem.textContent = erro.message;
+
+        }
+
+    });
+
+    </script>
+
+</body>
+</html>

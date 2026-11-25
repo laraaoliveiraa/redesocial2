@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar conta | Conecta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <main class="auth-layout">
+
+        <a class="brand" href="login.html">✦ Conecta.</a>
+
+        <section class="auth-card">
+
+            <h1>Faça parte da Conecta 💜</h1>
+
+            <p>
+                Crie sua conta e comece a compartilhar
+                momentos com outras pessoas.
+            </p>
+
+            <form id="cadastroForm">
+
+                <label>Nome completo</label>
+
+                <input
+                    type="text"
+                    name="nome"
+                    placeholder="Como podemos te chamar?"
+                    required
+                >
+
+                <label>Nome de usuário</label>
+
+                <input
+                    type="text"
+                    name="username"
+                    placeholder="Escolha seu username"
+                    required
+                >
+
+                <label>E-mail</label>
+
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="Digite seu e-mail"
+                    required
+                >
+
+                <label>Senha</label>
+
+                <input
+                    type="password"
+                    name="senha"
+                    placeholder="Crie uma senha"
+                    required
+                >
+
+                <button type="submit">Criar minha conta ✦</button>
+
+            </form>
+
+            <p id="mensagem"></p>
+
+            <p class="switch-auth">
+                Já tem uma conta?
+                <a href="login.html">Entre aqui</a>
+            </p>
+
+        </section>
+
+    </main>
+
+
+    <script>
+
+    const API = "http://localhost/redesocial/back/api.php";
+
+    document.getElementById("cadastroForm")
+    .addEventListener("submit", async function(e) {
+
+        e.preventDefault();
+
+        const dados = Object.fromEntries(new FormData(this));
+
+        const mensagem = document.getElementById("mensagem");
+
+        mensagem.textContent = "Criando sua conta...";
+
+        try {
+
+            const resposta = await fetch(API + "?rota=usuario", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify(dados)
+
+            });
+
+            const resultado = await resposta.json();
+
+            if (!resposta.ok || !resultado.sucesso) {
+
+                throw new Error(
+                    resultado.erro || "Não foi possível realizar o cadastro."
+                );
+
+            }
+
+            mensagem.textContent = "Conta criada com sucesso! 💜";
+
+            this.reset();
+
+            setTimeout(() => {
+
+                window.location.href = "login.html";
+
+            }, 1500);
+
+        } catch (erro) {
+
+            mensagem.textContent = erro.message;
+
+        }
+
+    });
+
+    </script>
+
+</body>
+</html>

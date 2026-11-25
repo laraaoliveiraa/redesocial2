@@ -1,0 +1,389 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conecta</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="social-layout" id="topo">
+
+    <aside class="sidebar">
+
+        <h1 class="logo">Conecta.</h1>
+
+        <div class="perfil-sidebar">
+            <div class="avatar" id="avatarPerfil">U</div>
+            <div>
+                <strong id="nomePerfil">Usuário</strong>
+                <small>Minha conta</small>
+            </div>
+        </div>
+
+        <nav class="sidebar-menu">
+            <a href="#topo" class="active">🏠 Início</a>
+            <a href="#publicacoes">🌎 Explorar</a>
+            <a href="#comunidade">👥 Comunidade</a>
+            <a href="#perfil">👤 Meu perfil</a>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <button id="btnSair">Sair da conta</button>
+        </div>
+
+    </aside>
+
+    <main class="feed-central">
+
+        <header class="feed-header">
+            <h2>Seu feed</h2>
+            <p>Compartilhe momentos e fique conectado!</p>
+        </header>
+
+        <section class="welcome">
+            <h2>Olá, <span id="nomeBoasVindas">usuário</span>! 💜</h2>
+            <p>Bem-vindo(a) ao Conecta. Compartilhe suas ideias e momentos!</p>
+        </section>
+
+        <section class="criar-publicacao">
+
+            <h3>O que está acontecendo?</h3>
+
+            <textarea
+                id="textoPublicacao"
+                placeholder="Compartilhe algo com a comunidade..."
+            ></textarea>
+
+            <input
+                type="url"
+                id="imagemPublicacao"
+                placeholder="Cole o link de uma imagem (opcional)"
+            >
+
+            <div class="create-post-footer">
+                <button id="btnPublicar">Publicar</button>
+            </div>
+
+        </section>
+
+        <section id="publicacoes">
+
+            <h3 class="feed-title">Publicações recentes</h3>
+
+            <div id="listaPublicacoes">
+                <p>Carregando publicações...</p>
+            </div>
+
+        </section>
+
+    </main>
+
+    <aside class="sidebar-direita">
+
+        <section class="card-lateral" id="perfil">
+
+            <h3>Meu perfil</h3>
+
+            <div class="perfil-direita">
+                <div class="avatar-grande" id="avatarDireita">U</div>
+                <strong id="nomeDireita">Usuário</strong>
+            </div>
+
+            <p>Bem-vindo(a) à nossa comunidade!</p>
+
+        </section>
+
+        <section class="card-lateral" id="comunidade">
+
+            <h3>Comunidade</h3>
+
+            <p>💜 Compartilhe ideias.</p>
+            <p>🌎 Conheça pessoas.</p>
+            <p>✨ Descubra novidades.</p>
+
+        </section>
+
+    </aside>
+
+</div>
+
+<script>
+
+const API = "http://localhost/redesocial/back/api.php";
+
+const idUsuario = Number(localStorage.getItem("id_usuario"));
+const nomeUsuario = localStorage.getItem("nome_usuario") || "Usuário";
+
+if (!idUsuario) {
+    window.location.href = "login.html";
+}
+
+document.getElementById("nomePerfil").textContent = nomeUsuario;
+document.getElementById("nomeDireita").textContent = nomeUsuario;
+document.getElementById("nomeBoasVindas").textContent = nomeUsuario;
+
+document.getElementById("avatarPerfil").textContent =
+    nomeUsuario.charAt(0).toUpperCase();
+
+document.getElementById("avatarDireita").textContent =
+    nomeUsuario.charAt(0).toUpperCase();
+
+const lista = document.getElementById("listaPublicacoes");
+
+let publicacoes = [];
+let curtidas = [];
+
+// CARREGAR PUBLICAÇÕES E CURTIDAS
+async function carregarPublicacoes() {
+
+    try {
+
+        const [respostaPublicacoes, respostaCurtidas] = await Promise.all([
+            fetch(API + "?rota=publicacao"),
+            fetch(API + "?rota=curtida")
+        ]);
+
+        if (!respostaPublicacoes.ok || !respostaCurtidas.ok) {
+            throw new Error("Erro ao buscar dados.");
+        }
+
+        publicacoes = await respostaPublicacoes.json();
+        curtidas = await respostaCurtidas.json();
+
+        mostrarPublicacoes();
+
+    } catch (erro) {
+
+        console.error(erro);
+
+        lista.innerHTML =
+            "<p>Não foi possível carregar as publicações.</p>";
+    }
+}
+
+// MOSTRAR PUBLICAÇÕES
+function mostrarPublicacoes() {
+
+    lista.innerHTML = "";
+
+    if (!Array.isArray(publicacoes) || publicacoes.length === 0) {
+
+        lista.innerHTML =
+            '<div class="empty-feed">Ainda não existem publicações. Seja o primeiro a compartilhar algo! 💜</div>';
+
+        return;
+    }
+
+    publicacoes.forEach(pub => {
+
+        const idPublicacao = Number(pub.id_publicacao);
+
+        const curtidasPublicacao = curtidas.filter(c =>
+            Number(c.id_publicacao) === idPublicacao
+        );
+
+        const jaCurtiu = curtidasPublicacao.some(c =>
+            Number(c.id_usuario) === idUsuario
+        );
+
+        const nome = pub.nome_usuario || pub.nome || "Usuário";
+        const legenda = pub.legenda || "";
+        const imagem = pub.imagem_url || "";
+
+        const card = document.createElement("article");
+        card.className = "publicacao-card";
+
+        // CABEÇALHO
+        const topo = document.createElement("div");
+        topo.className = "publicacao-topo";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar-publicacao";
+        avatar.textContent = nome.charAt(0).toUpperCase();
+
+        const dados = document.createElement("div");
+        dados.className = "dados-publicacao";
+
+        const nomeElemento = document.createElement("strong");
+        nomeElemento.textContent = nome;
+
+        const subtitulo = document.createElement("small");
+        subtitulo.textContent = "Compartilhou uma publicação";
+
+        dados.appendChild(nomeElemento);
+        dados.appendChild(subtitulo);
+
+        topo.appendChild(avatar);
+        topo.appendChild(dados);
+
+        card.appendChild(topo);
+
+        // TEXTO: SÓ APARECE SE EXISTIR
+        if (legenda.trim() !== "") {
+
+            const texto = document.createElement("p");
+
+            texto.className = "texto-publicacao";
+            texto.textContent = legenda;
+
+            card.appendChild(texto);
+        }
+
+        // IMAGEM: SÓ APARECE SE EXISTIR
+        if (imagem.trim() !== "") {
+
+            const foto = document.createElement("img");
+
+            foto.className = "imagem-publicacao";
+            foto.src = imagem;
+            foto.alt = "Imagem da publicação";
+            foto.loading = "lazy";
+
+            foto.onerror = function() {
+                this.style.display = "none";
+            };
+
+            card.appendChild(foto);
+        }
+
+        // AÇÕES
+        const acoes = document.createElement("div");
+        acoes.className = "acoes-publicacao";
+
+        const botao = document.createElement("button");
+
+        botao.className = "botao-curtir";
+        botao.textContent = jaCurtiu ? "♥ Curtido" : "♡ Curtir";
+        botao.disabled = jaCurtiu;
+
+        const contador = document.createElement("span");
+        contador.textContent = curtidasPublicacao.length + " curtidas";
+
+        botao.addEventListener("click", async () => {
+
+            try {
+
+                const resposta = await fetch(API + "?rota=curtida", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        id_usuario: idUsuario,
+                        id_publicacao: idPublicacao
+                    })
+                });
+
+                const resultado = await resposta.json();
+
+                if (!resposta.ok) {
+                    alert(resultado.erro || "Não foi possível curtir.");
+                    return;
+                }
+
+                await carregarPublicacoes();
+
+            } catch (erro) {
+
+                console.error(erro);
+                alert("Erro ao registrar curtida.");
+            }
+        });
+
+        acoes.appendChild(botao);
+        acoes.appendChild(contador);
+
+        card.appendChild(acoes);
+
+        lista.appendChild(card);
+
+    });
+}
+
+// CRIAR PUBLICAÇÃO
+document.getElementById("btnPublicar").addEventListener("click", async () => {
+
+    const legenda =
+        document.getElementById("textoPublicacao").value.trim();
+
+    const imagem =
+        document.getElementById("imagemPublicacao").value.trim();
+
+    if (!legenda && !imagem) {
+
+        alert("Escreva um texto ou informe um link de imagem!");
+        return;
+    }
+
+    try {
+
+        const resposta = await fetch(API + "?rota=publicacao", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                id_usuario: idUsuario,
+                legenda: legenda,
+                imagem_url: imagem
+            })
+
+        });
+
+        const resultado = await resposta.json();
+
+        if (!resposta.ok) {
+
+            alert(resultado.erro || "Não foi possível publicar.");
+            return;
+        }
+
+        document.getElementById("textoPublicacao").value = "";
+        document.getElementById("imagemPublicacao").value = "";
+
+        await carregarPublicacoes();
+
+    } catch (erro) {
+
+        console.error(erro);
+        alert("Erro ao criar publicação.");
+    }
+});
+
+// SAIR
+document.getElementById("btnSair").addEventListener("click", () => {
+
+    localStorage.removeItem("id_usuario");
+    localStorage.removeItem("nome_usuario");
+    localStorage.removeItem("email_usuario");
+
+    window.location.href = "login.html";
+});
+
+// MENU ATIVO
+document.querySelectorAll(".sidebar-menu a").forEach(link => {
+
+    link.addEventListener("click", () => {
+
+        document.querySelectorAll(".sidebar-menu a").forEach(item => {
+            item.classList.remove("active");
+        });
+
+        link.classList.add("active");
+    });
+
+});
+
+carregarPublicacoes();
+
+</script>
+
+</body>
+</html>
